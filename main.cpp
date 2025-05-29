@@ -40,15 +40,19 @@ struct Snake_Body {
     int vel;
 
     Snake_Body() : pos({ 0, 0 }), vel(1) {
-        rect = RectangleShape({ 40.f, 40.f });
+        rect = RectangleShape({ 38.f, 38.f });
         rect.setFillColor(Color::Yellow);
+        rect.setOutlineColor(Color::Black);
+        rect.setOutlineThickness(1.f);
     }
 
     Snake_Body(Vector2i position, int velocity) {
         pos = position;
         vel = velocity;
-        rect = RectangleShape({ 40.f, 40.f });
+        rect = RectangleShape({ 38.f, 38.f });
         rect.setFillColor(Color::Yellow);
+        rect.setOutlineColor(Color::Black);
+        rect.setOutlineThickness(1.f);
     }
 
     Vector2i Update(Vector2i prev) {
@@ -58,7 +62,7 @@ struct Snake_Body {
     }
 
     void Draw(RenderWindow& window) {
-        rect.setPosition({ pos.x * 40.f + 40.f, pos.y * 40.f + 40.f });
+        rect.setPosition({ pos.x * 40.f + 42.f, pos.y * 40.f + 42.f });
         window.draw(rect);
     }
 };
@@ -67,7 +71,7 @@ struct Snake {
 
     RectangleShape snake_head;
     Vector2i pos;
-    int vel;
+    int vel, next_dir;
     bool canTurn;
     vector<Snake_Body> body;
 
@@ -78,6 +82,7 @@ struct Snake {
         snake_head = RectangleShape({ 40.f, 40.f });
         snake_head.setFillColor(Color::Yellow);
         body = vector<Snake_Body>(0);
+        next_dir = -1;
     }
 
     Snake(Vector2i position, int velocity, int parts) {
@@ -89,6 +94,7 @@ struct Snake {
         for (int i = 1; i <= parts; i++) {
             body.push_back(Snake_Body(position - Vector2i{i, 0}, velocity));
         }
+        next_dir = -1;
     }
 
     Vector2i checkForOpen() {
@@ -109,6 +115,10 @@ struct Snake {
     }
 
     void Update() {
+        if (canTurn && next_dir != -1) {
+            Turn(next_dir);
+        }
+
         Vector2i prev_part = pos;
         switch (vel) {
             // North Vel
@@ -121,6 +131,7 @@ struct Snake {
             case 3: pos.x--; break;
         }
         canTurn = true;
+        next_dir = -1;
         for (Snake_Body& part : body) {
             prev_part = part.Update(prev_part);
         }
@@ -142,7 +153,15 @@ struct Snake {
     }
 
     void Grow() {
-        body.push_back(Snake_Body(body[body.size() - 1].pos, body[body.size() - 1].vel));
+        body.emplace_back(Snake_Body({50, 50}, vel));
+    }
+
+    bool checkBodyCollision() {
+        for (Snake_Body& part : body) {
+            if (part.pos == pos)
+                return true;
+        }
+        return false;
     }
 
 };
@@ -183,6 +202,7 @@ int main()
     vector<vector<RectangleShape>> grid(16);
     initializeGrid(grid, window);
     bool in_bounds = true;
+    bool body_collision = false;
 
     Snake snake({ 10, 10 }, 1, 10);
     bool fruit_here = false;
@@ -195,15 +215,18 @@ int main()
             if (event->is<Event::Closed>())
                 window.close();
             else if (const auto* keyPressed = event->getIf<Event::KeyPressed>()) {
-                if (keyPressed->scancode == Keyboard::Scancode::Up && snake.canTurn)
-                    snake.Turn(0);
-                else if (keyPressed->scancode == Keyboard::Scancode::Right && snake.canTurn)
-                    snake.Turn(1);
-                else if (keyPressed->scancode == Keyboard::Scancode::Down && snake.canTurn)
-                    snake.Turn(2);
-                else if (keyPressed->scancode == Keyboard::Scancode::Left && snake.canTurn)
-                    snake.Turn(3);
+                if (snake.canTurn) {
+                    if (keyPressed->scancode == Keyboard::Scancode::Up)
+                        snake.next_dir = 0;
+                    else if (keyPressed->scancode == Keyboard::Scancode::Right)
+                        snake.next_dir = 1;
+                    else if (keyPressed->scancode == Keyboard::Scancode::Down)
+                        snake.next_dir = 2;
+                    else if (keyPressed->scancode == Keyboard::Scancode::Left)
+                        snake.next_dir = 3;
+                }
             }
+
         }
        
         if (!fruit_here) {
@@ -224,6 +247,10 @@ int main()
             in_bounds = false;
             break;
         }
+        if (snake.checkBodyCollision()) {
+            body_collision = true;
+            break;
+        }
 
         window.clear();
         drawGrid(grid, window);
@@ -232,7 +259,11 @@ int main()
         window.display();
     }
 
-    cout << "Out of bounds" << "\n";
+    if (body_collision)
+        cout << "Collided with your body" << "\n";
+    if (!in_bounds)
+        cout << "Out of bounds" << "\n";
+
     window.close();
 
 }
