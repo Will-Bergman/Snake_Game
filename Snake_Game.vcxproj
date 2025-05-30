@@ -143,7 +143,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Game_Over.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Main_Menu.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Game_Over.h" />
+    <ClInclude Include="Main_Menu.h" />
+    <ClInclude Include="Utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,9 +1,15 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <cmath>
+#include "Main_Menu.h"
+#include "Game_Over.h"
 
 using namespace sf;
 using namespace std;
+
+enum class GameState {
+    MENU = 0, PLAYING = 1, GAME_OVER = 2
+};
 
 struct Fruit {
 
@@ -115,8 +121,9 @@ struct Snake {
     }
 
     void Update() {
+
         if (canTurn && next_dir != -1) {
-            Turn(next_dir);
+            Turn();
         }
 
         Vector2i prev_part = pos;
@@ -131,16 +138,16 @@ struct Snake {
             case 3: pos.x--; break;
         }
         canTurn = true;
-        next_dir = -1;
         for (Snake_Body& part : body) {
             prev_part = part.Update(prev_part);
         }
     }
 
-    void Turn(int dir) {
-        if ((vel + 2) % 4 != dir) {
-            vel = dir;
+    void Turn() {
+        if ((vel + 2) % 4 != next_dir) {
+            vel = next_dir;
             canTurn = false;
+            next_dir = -1;
         }
     }
 
@@ -194,19 +201,23 @@ void drawGrid(vector<vector<RectangleShape>> grid, RenderWindow& window) {
 
 int main()
 {
-    // Window & time
+    // Window & Game state
     RenderWindow window(VideoMode({ 1280, 720 }), "Snake");
+    Main_Menu menu(window);
+    Game_Over game_over(window);
+    GameState state = GameState::MENU;
     Clock snake_clock;
     
     // Snake and grid
     vector<vector<RectangleShape>> grid(16);
     initializeGrid(grid, window);
+    
+    Snake snake({ 10, 10 }, 1, 1);
+    bool fruit_here = false;
+    Fruit fruit;
     bool in_bounds = true;
     bool body_collision = false;
 
-    Snake snake({ 10, 10 }, 1, 10);
-    bool fruit_here = false;
-    Fruit fruit;
 
     while (window.isOpen())
     {
@@ -214,55 +225,79 @@ int main()
         {
             if (event->is<Event::Closed>())
                 window.close();
-            else if (const auto* keyPressed = event->getIf<Event::KeyPressed>()) {
-                if (snake.canTurn) {
-                    if (keyPressed->scancode == Keyboard::Scancode::Up)
-                        snake.next_dir = 0;
-                    else if (keyPressed->scancode == Keyboard::Scancode::Right)
-                        snake.next_dir = 1;
-                    else if (keyPressed->scancode == Keyboard::Scancode::Down)
-                        snake.next_dir = 2;
-                    else if (keyPressed->scancode == Keyboard::Scancode::Left)
-                        snake.next_dir = 3;
+
+            // Main Menu
+            if (state == GameState::MENU) {
+                if (const auto* keyPressed = event->getIf<Event::KeyPressed>()) {
+                    if (keyPressed->scancode == Keyboard::Scancode::Enter);
+                    state = GameState::PLAYING;
+                }
+            }
+            // Game
+            else if (state == GameState::PLAYING) {
+                if (const auto* keyPressed = event->getIf<Event::KeyPressed>()) {
+                    switch (keyPressed->scancode) {
+                    case Keyboard::Scancode::Up:    snake.next_dir = 0; break;
+                    case Keyboard::Scancode::Right: snake.next_dir = 1; break;
+                    case Keyboard::Scancode::Down:  snake.next_dir = 2; break;
+                    case Keyboard::Scancode::Left:  snake.next_dir = 3; break;
+                    default: break;
+                    }
+                }
+            }
+            else if (state == GameState::GAME_OVER) {
+                if (game_over.PlayAgain()) {
+                    snake = Snake({ 10, 10 }, 1, 1);
+                    bool fruit_here = false;
+                    bool in_bounds = true;
+                    bool body_collision = false;
+                    snake_clock.restart();
+                    state = GameState::PLAYING;
                 }
             }
 
         }
-       
-        if (!fruit_here) {
-            Vector2i random_fruit_spawn = snake.checkForOpen();
-            fruit = Fruit(random_fruit_spawn);
-            fruit_here = true;
-        }
-        if (snake_clock.getElapsedTime() > seconds(0.2)) {
-            snake.Update();
-            snake_clock.restart();
-        }
-        if (snake.pos == fruit.pos) {
-            fruit_here = false;
-            fruit.SetPosition({ -1, -1 });
-            snake.Grow();
-        }
-        if (snake.pos.x < 0 || snake.pos.y < 0 || snake.pos.x > 29 || snake.pos.y > 15) {
-            in_bounds = false;
-            break;
-        }
-        if (snake.checkBodyCollision()) {
-            body_collision = true;
-            break;
-        }
 
-        window.clear();
-        drawGrid(grid, window);
-        snake.Draw(window);
-        fruit.Draw(window);
-        window.display();
+       // Main Menu
+        if (state == GameState::MENU)
+            menu.Draw(window);
+        // Game
+        else if (state == GameState::PLAYING) {
+            if (!fruit_here) {
+                Vector2i random_fruit_spawn = snake.checkForOpen();
+                fruit = Fruit(random_fruit_spawn);
+                fruit_here = true;
+            }
+            if (snake_clock.getElapsedTime() > seconds(0.2)) {
+                snake.Update();
+                snake_clock.restart();
+            }
+            if (snake.pos == fruit.pos) {
+                fruit_here = false;
+                fruit.SetPosition({ -1, -1 });
+                snake.Grow();
+            }
+            if (snake.pos.x < 0 || snake.pos.y < 0 || snake.pos.x > 29 || snake.pos.y > 15) {
+                in_bounds = false;
+                game_over.setScore(snake.body.size());
+                state = GameState::GAME_OVER;
+            }
+            if (snake.checkBodyCollision()) {
+                body_collision = true;
+                game_over.setScore(snake.body.size());
+                state = GameState::GAME_OVER;
+            }
+            window.clear();
+            drawGrid(grid, window);
+            snake.Draw(window);
+            fruit.Draw(window);
+            window.display();
+        }
+        // Game Over
+        else if (state == GameState::GAME_OVER) {
+            game_over.Draw(window);
+        }
     }
-
-    if (body_collision)
-        cout << "Collided with your body" << "\n";
-    if (!in_bounds)
-        cout << "Out of bounds" << "\n";
 
     window.close();
 
