@@ -3,6 +3,8 @@
 #include <cmath>
 #include "Main_Menu.h"
 #include "Game_Over.h"
+#include "Snake.h"
+#include "Fruit.h"
 
 using namespace sf;
 using namespace std;
@@ -10,169 +12,6 @@ using namespace std;
 enum class GameState {
     MENU = 0, PLAYING = 1, GAME_OVER = 2
 };
-
-struct Fruit {
-
-    CircleShape fruit;
-    Vector2i pos;
-
-    Fruit() {
-        pos = { 1, 1 };
-        fruit = CircleShape(20.f);
-        fruit.setFillColor(Color::Red);
-        fruit.setPosition({ 1, 1 });
-    }
-
-    Fruit(Vector2i position) {
-        pos = position;
-        fruit = CircleShape(20.f);
-        fruit.setFillColor(Color::Red);
-        fruit.setPosition({ position.x * 40.f + 40.f, position.y * 40.f + 40.f });
-    }
-
-    void Draw(RenderWindow& window) {
-        window.draw(fruit);
-    }
-
-    void SetPosition(Vector2i newPos) {
-        pos = newPos;
-        fruit.setPosition({ pos.x * 40.f + 40.f, pos.y * 40.f + 40.f });
-    }
-};
-
-struct Snake_Body {
-    RectangleShape rect;
-    Vector2i pos;
-    int vel;
-
-    Snake_Body() : pos({ 0, 0 }), vel(1) {
-        rect = RectangleShape({ 38.f, 38.f });
-        rect.setFillColor(Color::Yellow);
-        rect.setOutlineColor(Color::Black);
-        rect.setOutlineThickness(1.f);
-    }
-
-    Snake_Body(Vector2i position, int velocity) {
-        pos = position;
-        vel = velocity;
-        rect = RectangleShape({ 38.f, 38.f });
-        rect.setFillColor(Color::Yellow);
-        rect.setOutlineColor(Color::Black);
-        rect.setOutlineThickness(1.f);
-    }
-
-    Vector2i Update(Vector2i prev) {
-        Vector2i temp = pos;
-        pos = prev;
-        return temp;
-    }
-
-    void Draw(RenderWindow& window) {
-        rect.setPosition({ pos.x * 40.f + 42.f, pos.y * 40.f + 42.f });
-        window.draw(rect);
-    }
-};
-
-struct Snake {
-
-    RectangleShape snake_head;
-    Vector2i pos;
-    int vel, next_dir;
-    bool canTurn;
-    vector<Snake_Body> body;
-
-    Snake(Vector2i position, int velocity) {
-        pos = position;
-        vel = velocity;
-        canTurn = true;
-        snake_head = RectangleShape({ 40.f, 40.f });
-        snake_head.setFillColor(Color::Yellow);
-        body = vector<Snake_Body>(0);
-        next_dir = -1;
-    }
-
-    Snake(Vector2i position, int velocity, int parts) {
-        pos = position;
-        vel = velocity;
-        canTurn = true;
-        snake_head = RectangleShape({ 40.f, 40.f });
-        snake_head.setFillColor(Color::Yellow);
-        for (int i = 1; i <= parts; i++) {
-            body.push_back(Snake_Body(position - Vector2i{i, 0}, velocity));
-        }
-        next_dir = -1;
-    }
-
-    Vector2i checkForOpen() {
-        Vector2i random_sq;
-        do {
-            random_sq = { rand()%30, rand() % 16 };
-        } while (isOccupied(random_sq));
-        return random_sq;
-    }
-
-    bool isOccupied(Vector2i position) {
-        if (pos == position)
-            return true;
-        for (const auto& part : body)
-            if (position == part.pos)
-                return true;
-        return false;
-    }
-
-    void Update() {
-
-        if (canTurn && next_dir != -1) {
-            Turn();
-        }
-
-        Vector2i prev_part = pos;
-        switch (vel) {
-            // North Vel
-            case 0: pos.y--; break;
-            // East Vel
-            case 1: pos.x++; break;;
-            // South Vel
-            case 2: pos.y++; break;
-            // West Vel
-            case 3: pos.x--; break;
-        }
-        canTurn = true;
-        for (Snake_Body& part : body) {
-            prev_part = part.Update(prev_part);
-        }
-    }
-
-    void Turn() {
-        if ((vel + 2) % 4 != next_dir) {
-            vel = next_dir;
-            canTurn = false;
-            next_dir = -1;
-        }
-    }
-
-    void Draw(RenderWindow& window) {
-        snake_head.setPosition({ pos.x * 40.f + 40.f, pos.y * 40.f + 40.f });
-        window.draw(snake_head);
-        for (Snake_Body& part : body) {
-            part.Draw(window);
-        }
-    }
-
-    void Grow() {
-        body.emplace_back(Snake_Body({50, 50}, vel));
-    }
-
-    bool checkBodyCollision() {
-        for (Snake_Body& part : body) {
-            if (part.pos == pos)
-                return true;
-        }
-        return false;
-    }
-
-};
-
 
 void initializeGrid(vector<vector<RectangleShape>>& grid, RenderWindow& window) {
 
@@ -206,7 +45,17 @@ int main()
     Main_Menu menu(window);
     Game_Over game_over(window);
     GameState state = GameState::MENU;
-    Clock snake_clock;
+    Clock game_clock, snake_clock, fps_clock;
+
+    // Game details
+    Font pixel_font;
+    pixel_font.openFromFile("assets/fonts/pixel_font.ttf");
+    Time previousTime = fps_clock.getElapsedTime();
+    Text fpsText(pixel_font, "fps: 0", 20);
+    fpsText.setPosition({ 25.f, 5.f });
+    float frames = 0;
+    float fps;
+
     
     // Snake and grid
     vector<vector<RectangleShape>> grid(16);
@@ -221,6 +70,20 @@ int main()
 
     while (window.isOpen())
     {
+        frames++;
+        Time currentTime = fps_clock.getElapsedTime();
+        if (currentTime.asSeconds() - previousTime.asSeconds() >= 1.0f) {
+            fps = frames / (currentTime.asSeconds() - previousTime.asSeconds());
+            previousTime = currentTime;
+            frames = 0;
+
+            std::stringstream ss;
+            ss.precision(2);
+            ss << "FPS: " << int(fps);
+            fpsText.setString(ss.str());
+        }
+        // ----------------------------------------------
+        // ---------------- Event Loop ------------------
         while (const optional event = window.pollEvent())
         {
             if (event->is<Event::Closed>())
@@ -229,18 +92,18 @@ int main()
             // Main Menu
             if (state == GameState::MENU) {
                 if (const auto* keyPressed = event->getIf<Event::KeyPressed>()) {
-                    if (keyPressed->scancode == Keyboard::Scancode::Enter);
-                    state = GameState::PLAYING;
+                    if (keyPressed->scancode == Keyboard::Scancode::Enter)
+                        state = GameState::PLAYING;
                 }
             }
             // Game
             else if (state == GameState::PLAYING) {
                 if (const auto* keyPressed = event->getIf<Event::KeyPressed>()) {
                     switch (keyPressed->scancode) {
-                    case Keyboard::Scancode::Up:    snake.next_dir = 0; break;
-                    case Keyboard::Scancode::Right: snake.next_dir = 1; break;
-                    case Keyboard::Scancode::Down:  snake.next_dir = 2; break;
-                    case Keyboard::Scancode::Left:  snake.next_dir = 3; break;
+                    case Keyboard::Scancode::Up:    snake.changeNextDir(0); break;
+                    case Keyboard::Scancode::Right: snake.changeNextDir(1); break;
+                    case Keyboard::Scancode::Down:  snake.changeNextDir(2); break;
+                    case Keyboard::Scancode::Left:  snake.changeNextDir(3); break;
                     default: break;
                     }
                 }
@@ -257,10 +120,12 @@ int main()
             }
 
         }
-
-       // Main Menu
-        if (state == GameState::MENU)
+        // ----------------------------------------------
+        // Main Menu
+        if (state == GameState::MENU) {
+            menu.MoveTitle(game_clock);
             menu.Draw(window);
+        }
         // Game
         else if (state == GameState::PLAYING) {
             if (!fruit_here) {
@@ -268,29 +133,30 @@ int main()
                 fruit = Fruit(random_fruit_spawn);
                 fruit_here = true;
             }
-            if (snake_clock.getElapsedTime() > seconds(0.2)) {
+            if (snake_clock.getElapsedTime().asSeconds() > 0.2) {
                 snake.Update();
                 snake_clock.restart();
             }
-            if (snake.pos == fruit.pos) {
+            if (snake.getPosition() == fruit.getPosition()) {
                 fruit_here = false;
                 fruit.SetPosition({ -1, -1 });
                 snake.Grow();
             }
-            if (snake.pos.x < 0 || snake.pos.y < 0 || snake.pos.x > 29 || snake.pos.y > 15) {
+            if (snake.getPosition().x < 0 || snake.getPosition().y < 0 || snake.getPosition().x > 29 || snake.getPosition().y > 15) {
                 in_bounds = false;
-                game_over.setScore(snake.body.size());
+                game_over.setScore(snake.getBody().size());
                 state = GameState::GAME_OVER;
             }
             if (snake.checkBodyCollision()) {
                 body_collision = true;
-                game_over.setScore(snake.body.size());
+                game_over.setScore(snake.getBody().size());
                 state = GameState::GAME_OVER;
             }
             window.clear();
             drawGrid(grid, window);
             snake.Draw(window);
             fruit.Draw(window);
+            window.draw(fpsText);
             window.display();
         }
         // Game Over
