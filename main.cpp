@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <iostream>
 #include <cmath>
 #include "Main_Menu.h"
@@ -48,8 +49,12 @@ int main()
     Clock game_clock, snake_clock, fps_clock;
 
     // Game details
+    Music hava;
+    if (!hava.openFromFile("assets/audios/hava_nagila.mp3")) {
+        std::cerr << "Failed to open music file\n";
+    }
     Font pixel_font;
-    pixel_font.openFromFile("assets/fonts/pixel_font.ttf");
+    pixel_font.openFromFile("./assets/fonts/pixel_font.ttf");
     Time previousTime = fps_clock.getElapsedTime();
     Text fpsText(pixel_font, "fps: 0", 20);
     fpsText.setPosition({ 25.f, 5.f });
@@ -61,9 +66,13 @@ int main()
     vector<vector<RectangleShape>> grid(16);
     initializeGrid(grid, window);
     
-    Snake snake({ 10, 10 }, 1, 1);
+    Texture snake_head_texture;
+    Texture fruit_texture;
+    snake_head_texture.loadFromFile("assets/textures/snake_head2.png");
+    fruit_texture.loadFromFile("assets/textures/pixel_coin.jpg");
+    Snake snake({ 10, 10 }, 1, 1, snake_head_texture);
     bool fruit_here = false;
-    Fruit fruit;
+    Fruit fruit(fruit_texture);
     bool in_bounds = true;
     bool body_collision = false;
 
@@ -92,8 +101,10 @@ int main()
             // Main Menu
             if (state == GameState::MENU) {
                 if (const auto* keyPressed = event->getIf<Event::KeyPressed>()) {
-                    if (keyPressed->scancode == Keyboard::Scancode::Enter)
+                    if (keyPressed->scancode == Keyboard::Scancode::Enter) {
                         state = GameState::PLAYING;
+                        hava.play();
+                    }
                 }
             }
             // Game
@@ -110,7 +121,7 @@ int main()
             }
             else if (state == GameState::GAME_OVER) {
                 if (game_over.PlayAgain()) {
-                    snake = Snake({ 10, 10 }, 1, 1);
+                    snake = Snake({ 10, 10 }, 1, 1, snake_head_texture);
                     bool fruit_here = false;
                     bool in_bounds = true;
                     bool body_collision = false;
@@ -130,7 +141,7 @@ int main()
         else if (state == GameState::PLAYING) {
             if (!fruit_here) {
                 Vector2i random_fruit_spawn = snake.checkForOpen();
-                fruit = Fruit(random_fruit_spawn);
+                fruit = Fruit(random_fruit_spawn, fruit_texture);
                 fruit_here = true;
             }
             if (snake_clock.getElapsedTime().asSeconds() > 0.2) {
@@ -166,5 +177,5 @@ int main()
     }
 
     window.close();
-
+    return 0;
 }

@@ -8,12 +8,12 @@ using namespace std;
 class Fruit
 {
 	private:
-		CircleShape fruit;
 		Vector2i pos;
+		Sprite fruit;
 
 	public:
-		Fruit();
-		Fruit(Vector2i);
+		Fruit(Texture&);
+		Fruit(Vector2i, Texture&);
 
 		Vector2i getPosition();
 		void Draw(RenderWindow&);

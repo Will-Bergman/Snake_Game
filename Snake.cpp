@@ -2,40 +2,45 @@
 #include <iostream>
 
 // --------- Constructors ----------------
-Snake::Snake(Vector2i position, int velocity) {
-    pos = position;
+Snake::Snake(Vector2i position, int velocity, Texture& texture) : 
+    snake_head(texture) {
+    snake_head.setScale({40.f / texture.getSize().x, 40.f / texture.getSize().y});
+    snake_head.setOrigin({ texture.getSize().x / 2.f, texture.getSize().y / 2.f});
+    pos = position; 
     vel = velocity;
     canTurn = true;
-    snake_head = RectangleShape({ 40.f, 40.f });
-    snake_head.setFillColor(Color::Yellow);
     body = vector<Snake_Body>(0);
     next_dir = -1;
 }
 
-Snake::Snake(Vector2i position, int velocity, int parts) {
+Snake::Snake(Vector2i position, int velocity, int parts, Texture& texture) : 
+    snake_head(texture) {
+    snake_head.setScale({ 80.f / texture.getSize().x, 80.f / texture.getSize().y });
+    snake_head.setOrigin({ texture.getSize().x / 2.f, texture.getSize().y / 2.f });
     pos = position;
     vel = velocity;
     canTurn = true;
-    snake_head = RectangleShape({ 40.f, 40.f });
-    snake_head.setFillColor(Color::Yellow);
     for (int i = 1; i <= parts; i++) {
-        body.push_back(Snake_Body(position - Vector2i{ i, 0 }, velocity));
+        if(i % 2 == 0)
+            body.emplace_back(position - Vector2i{ i, 0 }, velocity, Color::Blue);
+        else
+            body.emplace_back(position - Vector2i{ i, 0 }, velocity, Color::White);
     }
     next_dir = -1;
 }
 
 Snake_Body::Snake_Body() : pos({ 0, 0 }), vel(1) {
     rect = RectangleShape({ 38.f, 38.f });
-    rect.setFillColor(Color::Yellow);
+    rect.setFillColor(Color::White);
     rect.setOutlineColor(Color::Black);
     rect.setOutlineThickness(1.f);
 }
 
-Snake_Body::Snake_Body(Vector2i position, int velocity) {
+Snake_Body::Snake_Body(Vector2i position, int velocity, Color color) {
     pos = position;
     vel = velocity;
     rect = RectangleShape({ 38.f, 38.f });
-    rect.setFillColor(Color::Yellow);
+    rect.setFillColor(color);
     rect.setOutlineColor(Color::Black);
     rect.setOutlineThickness(1.f);
 }
@@ -91,11 +96,23 @@ void Snake::Update() {
         // North Vel
     case 0: pos.y--; break;
         // East Vel
-    case 1: pos.x++; break;;
+    case 1:
+        pos.x++;
+        if (snake_head.getScale().x < 0) {
+            Vector2f scale = snake_head.getScale();
+            snake_head.setScale({ -scale.x, scale.y });  // Make it face right
+        }
+        break;
         // South Vel
     case 2: pos.y++; break;
         // West Vel
-    case 3: pos.x--; break;
+    case 3:
+        pos.x--;
+        if (snake_head.getScale().x > 0) {
+            Vector2f scale = snake_head.getScale();
+            snake_head.setScale({ -scale.x, scale.y });  // Make it face left
+        }
+        break;
     }
     canTurn = true;
     for (Snake_Body& part : body) {
@@ -112,15 +129,19 @@ void Snake::Turn() {
 }
 
 void Snake::Draw(RenderWindow& window) {
-    snake_head.setPosition({ pos.x * 40.f + 40.f, pos.y * 40.f + 40.f });
-    window.draw(snake_head);
     for (Snake_Body& part : body) {
         part.Draw(window);
     }
+    snake_head.setPosition({ pos.x * 40.f + 60.f, pos.y * 40.f + 60.f });
+    window.draw(snake_head);
 }
 
 void Snake::Grow() {
-    body.emplace_back(Snake_Body({ 50, 50 }, vel));
+    if(body.size() % 2 == 0)
+        body.emplace_back(Vector2i{ 50, 50 }, vel, Color::White);
+    else {
+        body.emplace_back(Vector2i{ 50, 50 }, vel, Color::Blue);
+    }
 }
 
 bool Snake::checkBodyCollision() {

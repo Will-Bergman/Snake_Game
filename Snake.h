@@ -14,7 +14,7 @@ private:
 public:
     //Constructors
     Snake_Body();
-    Snake_Body(Vector2i, int);
+    Snake_Body(Vector2i, int, Color);
 
     //Functions
     Vector2i Update(Vector2i);
@@ -26,7 +26,7 @@ public:
 class Snake
 {
     private:
-        RectangleShape snake_head;
+        Sprite snake_head;
         Vector2i pos;
         int vel, next_dir;
         bool canTurn;
@@ -34,8 +34,8 @@ class Snake
 
     public:
         //Constructors
-        Snake(Vector2i, int);
-        Snake(Vector2i, int, int);
+        Snake(Vector2i, int, Texture&);
+        Snake(Vector2i, int, int, Texture&);
 
         //Functions
         const vector<Snake_Body>& getBody() const;

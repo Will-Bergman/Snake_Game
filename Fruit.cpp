@@ -1,17 +1,17 @@
 #include "Fruit.h"
 
-Fruit::Fruit() {
+Fruit::Fruit(Texture& texture) :
+    fruit(texture) {
     pos = { 1, 1 };
-    fruit = CircleShape(20.f);
-    fruit.setFillColor(Color::Red);
-    fruit.setPosition({ 1, 1 });
+    fruit.setScale({ 40.f / texture.getSize().x, 40.f / texture.getSize().y });
+    fruit.setPosition({ -1, -1 });
 }
 
-Fruit::Fruit(Vector2i position) {
+Fruit::Fruit(Vector2i position, Texture& texture) : 
+    fruit(texture) {
     pos = position;
-    fruit = CircleShape(20.f);
-    fruit.setFillColor(Color::Red);
     fruit.setPosition({ position.x * 40.f + 40.f, position.y * 40.f + 40.f });
+    fruit.setScale({ 40.f / texture.getSize().x, 40.f / texture.getSize().y });
 }
 
 Vector2i Fruit::getPosition() {
