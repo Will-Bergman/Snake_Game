@@ -1,2 +1,23 @@
-﻿  main.cpp
+﻿  Fruit.cpp
+C:\Users\willi\OneDrive\Desktop\Code Projects\Snake_Game\include\SFML\System\Exception.hpp(41,47): warning C4275: non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
+  (compiling source file 'Fruit.cpp')
+  C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\stdexcept(100,19):
+  see declaration of 'std::runtime_error'
+  C:\Users\willi\OneDrive\Desktop\Code Projects\Snake_Game\include\SFML\System\Exception.hpp(41,23):
+  see declaration of 'sf::Exception'
+  
+  main.cpp
+C:\Users\willi\OneDrive\Desktop\Code Projects\Snake_Game\include\SFML\System\Exception.hpp(41,47): warning C4275: non dll-interface class 'std::runtime_error' used as base for dll-interface class 'sf::Exception'
+  (compiling source file 'main.cpp')
+  C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\stdexcept(100,19):
+  see declaration of 'std::runtime_error'
+  C:\Users\willi\OneDrive\Desktop\Code Projects\Snake_Game\include\SFML\System\Exception.hpp(41,23):
+  see declaration of 'sf::Exception'
+  
+C:\Users\willi\OneDrive\Desktop\Code Projects\Snake_Game\main.cpp(57,28): warning C4834: discarding return value of function with [[nodiscard]] attribute
+C:\Users\willi\OneDrive\Desktop\Code Projects\Snake_Game\main.cpp(71,36): warning C4834: discarding return value of function with [[nodiscard]] attribute
+C:\Users\willi\OneDrive\Desktop\Code Projects\Snake_Game\main.cpp(72,31): warning C4834: discarding return value of function with [[nodiscard]] attribute
+C:\Users\willi\OneDrive\Desktop\Code Projects\Snake_Game\main.cpp(158,56): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\willi\OneDrive\Desktop\Code Projects\Snake_Game\main.cpp(163,56): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+  Generating Code...
   Snake_Game.vcxproj -> C:\Users\willi\OneDrive\Desktop\Code Projects\Snake_Game\x64\Debug\Snake_Game.exe

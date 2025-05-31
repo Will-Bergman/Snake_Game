@@ -46,7 +46,7 @@ int main()
     Main_Menu menu(window);
     Game_Over game_over(window);
     GameState state = GameState::MENU;
-    Clock game_clock, snake_clock, fps_clock;
+    Clock game_clock, snake_clock, fps_clock, fruit_spawn_clock;
 
     // Game details
     Music hava;
@@ -69,10 +69,10 @@ int main()
     Texture snake_head_texture;
     Texture fruit_texture;
     snake_head_texture.loadFromFile("assets/textures/snake_head2.png");
-    fruit_texture.loadFromFile("assets/textures/pixel_coin.jpg");
+    fruit_texture.loadFromFile("assets/textures/pixel_coin.png");
     Snake snake({ 10, 10 }, 1, 1, snake_head_texture);
     bool fruit_here = false;
-    Fruit fruit(fruit_texture);
+    vector<Fruit> fruits;
     bool in_bounds = true;
     bool body_collision = false;
 
@@ -105,6 +105,10 @@ int main()
                         state = GameState::PLAYING;
                         hava.play();
                     }
+                }
+                else if (menu.play_button.isClicked(window)) {
+                    state = GameState::PLAYING;
+                    hava.play();
                 }
             }
             // Game
@@ -139,19 +143,24 @@ int main()
         }
         // Game
         else if (state == GameState::PLAYING) {
-            if (!fruit_here) {
-                Vector2i random_fruit_spawn = snake.checkForOpen();
-                fruit = Fruit(random_fruit_spawn, fruit_texture);
-                fruit_here = true;
+            if (fruit_spawn_clock.getElapsedTime().asSeconds() > 2.f) {
+                Vector2i new_pos = snake.checkForOpen();
+                Fruit new_fruit(fruit_texture);
+                new_fruit.SetPosition(new_pos);
+                fruits.push_back(new_fruit);
+                fruit_spawn_clock.restart();
             }
+
             if (snake_clock.getElapsedTime().asSeconds() > 0.2) {
                 snake.Update();
                 snake_clock.restart();
             }
-            if (snake.getPosition() == fruit.getPosition()) {
-                fruit_here = false;
-                fruit.SetPosition({ -1, -1 });
-                snake.Grow();
+            for (Fruit& fruit : fruits) {
+                if (snake.getPosition() == fruit.getPosition()) {
+                    fruit_here = false;
+                    fruit.SetPosition({ -1, -1 });
+                    snake.Grow();
+                }
             }
             if (snake.getPosition().x < 0 || snake.getPosition().y < 0 || snake.getPosition().x > 29 || snake.getPosition().y > 15) {
                 in_bounds = false;
@@ -166,7 +175,9 @@ int main()
             window.clear();
             drawGrid(grid, window);
             snake.Draw(window);
-            fruit.Draw(window);
+            for (Fruit& fruit : fruits) {
+                fruit.Draw(window);
+            }
             window.draw(fpsText);
             window.display();
         }

@@ -6,9 +6,13 @@ C:\Users\willi\OneDrive\Desktop\Code Projects\Snake_Game\include\SFML\System\Exc
   C:\Users\willi\OneDrive\Desktop\Code Projects\Snake_Game\include\SFML\System\Exception.hpp(41,23):
   see declaration of 'sf::Exception'
   
-C:\Users\willi\OneDrive\Desktop\Code Projects\Snake_Game\main.cpp(214,52): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\willi\OneDrive\Desktop\Code Projects\Snake_Game\main.cpp(57,28): warning C4834: discarding return value of function with [[nodiscard]] attribute
+C:\Users\willi\OneDrive\Desktop\Code Projects\Snake_Game\main.cpp(71,36): warning C4834: discarding return value of function with [[nodiscard]] attribute
+C:\Users\willi\OneDrive\Desktop\Code Projects\Snake_Game\main.cpp(72,31): warning C4834: discarding return value of function with [[nodiscard]] attribute
+C:\Users\willi\OneDrive\Desktop\Code Projects\Snake_Game\main.cpp(167,56): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\willi\OneDrive\Desktop\Code Projects\Snake_Game\main.cpp(172,56): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
   Generating code
-  1 of 251 functions ( 0.4%) were compiled, the rest were copied from previous compilation.
+  1 of 587 functions ( 0.2%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
     0 functions had inline decision re-evaluated but remain unchanged
   Finished generating code

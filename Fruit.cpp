@@ -10,8 +10,8 @@ Fruit::Fruit(Texture& texture) :
 Fruit::Fruit(Vector2i position, Texture& texture) : 
     fruit(texture) {
     pos = position;
-    fruit.setPosition({ position.x * 40.f + 40.f, position.y * 40.f + 40.f });
-    fruit.setScale({ 40.f / texture.getSize().x, 40.f / texture.getSize().y });
+    fruit.setPosition({ position.x * 40.f + 34.f, position.y * 40.f + 30.f });
+    fruit.setScale({ 60.f / texture.getSize().x, 60.f / texture.getSize().y });
 }
 
 Vector2i Fruit::getPosition() {

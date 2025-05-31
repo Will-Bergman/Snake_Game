@@ -3,6 +3,7 @@
 #include "SFML\Graphics.hpp"
 #include "SFML\Window.hpp"
 #include "Utils.h"
+#include "Button.h"
 #include <iostream>
 
 using namespace sf;
@@ -14,9 +15,9 @@ class Main_Menu
 		Font font;
 		Text titleText;
 		Vector2f baseTitlePos;
-		Text startText;
 	
 	public:
+		Button play_button;
 		Main_Menu(RenderWindow&);
 
 		void MoveTitle(Clock);
