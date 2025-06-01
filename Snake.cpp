@@ -1,4 +1,5 @@
 #include "Snake.h"
+#include "Utils.h"
 #include <iostream>
 
 // --------- Constructors ----------------
@@ -21,10 +22,7 @@ Snake::Snake(Vector2i position, int velocity, int parts, Texture& texture) :
     vel = velocity;
     canTurn = true;
     for (int i = 1; i <= parts; i++) {
-        if(i % 2 == 0)
-            body.emplace_back(position - Vector2i{ i, 0 }, velocity, Color::Blue);
-        else
-            body.emplace_back(position - Vector2i{ i, 0 }, velocity, Color::White);
+        Grow();
     }
     next_dir = -1;
 }
@@ -94,25 +92,13 @@ void Snake::Update() {
     Vector2i prev_part = pos;
     switch (vel) {
         // North Vel
-    case 0: pos.y--; break;
+    case 0: pos.y--; snake_head.setRotation(degrees(270)); break;
         // East Vel
-    case 1:
-        pos.x++;
-        if (snake_head.getScale().x < 0) {
-            Vector2f scale = snake_head.getScale();
-            snake_head.setScale({ -scale.x, scale.y });  // Make it face right
-        }
-        break;
+    case 1: pos.x++; snake_head.setRotation(degrees(0)); break;
         // South Vel
-    case 2: pos.y++; break;
+    case 2: pos.y++; snake_head.setRotation(degrees(90)); break;
         // West Vel
-    case 3:
-        pos.x--;
-        if (snake_head.getScale().x > 0) {
-            Vector2f scale = snake_head.getScale();
-            snake_head.setScale({ -scale.x, scale.y });  // Make it face left
-        }
-        break;
+    case 3: pos.x--; snake_head.setRotation(degrees(180)); break;
     }
     canTurn = true;
     for (Snake_Body& part : body) {
@@ -137,11 +123,10 @@ void Snake::Draw(RenderWindow& window) {
 }
 
 void Snake::Grow() {
-    if(body.size() % 2 == 0)
-        body.emplace_back(Vector2i{ 50, 50 }, vel, Color::White);
-    else {
-        body.emplace_back(Vector2i{ 50, 50 }, vel, Color::Blue);
-    }
+    Vector2i tailPos = body.empty() ? pos : body.back().getPosition();
+    float hue = static_cast<float>(body.size() % 50) / 50.0f; // Rainbow cycle
+    sf::Color color = HSVtoRGB(hue);
+    body.emplace_back(tailPos, vel, color);
 }
 
 bool Snake::checkBodyCollision() {

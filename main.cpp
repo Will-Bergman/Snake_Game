@@ -50,7 +50,7 @@ int main()
 
     // Game details
     Music hava;
-    if (!hava.openFromFile("assets/audios/hava_nagila.mp3")) {
+    if (!hava.openFromFile("assets/audios/Pilotwings 64 Replay.mp3")) {
         std::cerr << "Failed to open music file\n";
     }
     Font pixel_font;
@@ -69,7 +69,7 @@ int main()
     Texture snake_head_texture;
     Texture fruit_texture;
     snake_head_texture.loadFromFile("assets/textures/snake_head2.png");
-    fruit_texture.loadFromFile("assets/textures/pixel_coin.png");
+    fruit_texture.loadFromFile("assets/textures/pixel_fruit.png");
     Snake snake({ 10, 10 }, 1, 1, snake_head_texture);
     bool fruit_here = false;
     vector<Fruit> fruits;
